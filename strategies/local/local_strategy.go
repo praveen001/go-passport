@@ -1,32 +1,34 @@
-package passport
+package local
 
 import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	passport "github.com/praveen001/go-passport"
 )
 
-// LocalStrategy ..
-type LocalStrategy struct {
-	Options *LocalStrategyOptions
+// Strategy ..
+type Strategy struct {
+	Options *StrategyOptions
 }
 
-// LocalStrategyOptions ..
-type LocalStrategyOptions struct {
+// StrategyOptions ..
+type StrategyOptions struct {
 	UsernameField string
 	PasswordField string
 	Verify        func(username, password string) (ok bool, info interface{})
 }
 
-// NewLocalStrategy ..
-func NewLocalStrategy(opt *LocalStrategyOptions) *LocalStrategy {
-	return &LocalStrategy{
+// New ..
+func New(opt *StrategyOptions) *Strategy {
+	return &Strategy{
 		Options: opt,
 	}
 }
 
 // Authenticate ..
-func (l *LocalStrategy) Authenticate(w http.ResponseWriter, r *http.Request, next CallbackFunc) {
+func (l *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, next passport.CallbackFunc) {
 	body := make(map[string]string)
 
 	// Read username, password
@@ -46,7 +48,7 @@ func (l *LocalStrategy) Authenticate(w http.ResponseWriter, r *http.Request, nex
 	// Call verify
 	ok, info := l.Options.Verify(username, password)
 
-	res := &Result{
+	res := &passport.Result{
 		Ok:   ok,
 		Info: info,
 	}
