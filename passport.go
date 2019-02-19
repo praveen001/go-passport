@@ -1,7 +1,6 @@
 package passport
 
 import (
-	"context"
 	"net/http"
 )
 
@@ -27,9 +26,7 @@ func Authenticate(s Strategy, opt *Options, h http.HandlerFunc) http.HandlerFunc
 }
 
 func (res *Result) withCustomHandler(w http.ResponseWriter, r *http.Request, h http.HandlerFunc) {
-	ctx := context.WithValue(r.Context(), CtxKey, res)
-
-	h.ServeHTTP(w, r.WithContext(ctx))
+	h.ServeHTTP(w, r)
 }
 
 func (res *Result) withDefaultHandler(w http.ResponseWriter, r *http.Request, opt *Options) {

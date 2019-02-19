@@ -31,7 +31,7 @@ func localStrategy() *local.Strategy {
 		UsernameField: "username",
 		PasswordField: "password",
 		Verify: func(username, password string) (bool, interface{}) {
-			return true, nil
+			return true, 10
 		},
 	}
 
@@ -51,7 +51,7 @@ func main() {
 		r.Post("/login", passport.Authenticate(localStrategy(), opt, nil))
 
 		r.Group(func(r chi.Router) {
-			r.Use(middleware)
+			r.Use(passport.AuthRequired)
 			r.Get("/success", success)
 		})
 	})
