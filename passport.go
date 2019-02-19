@@ -3,6 +3,7 @@ package passport
 import (
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"log"
 	"net/http"
@@ -19,6 +20,7 @@ type OutputFormat int
 // JSON .
 const (
 	JSON OutputFormat = iota
+	XML
 	String
 )
 
@@ -90,6 +92,11 @@ func (p *Passport) output(w http.ResponseWriter, o interface{}) {
 	case JSON:
 		if err := json.NewEncoder(w).Encode(o); err != nil {
 			log.Println("Unable to format output to JSON")
+		}
+
+	case XML:
+		if err := xml.NewEncoder(w).Encode(o); err != nil {
+			log.Println("Unable to format output to XML")
 		}
 
 	case String:
