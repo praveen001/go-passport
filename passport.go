@@ -46,6 +46,7 @@ func (p *Passport) Authenticate(name string, h http.HandlerFunc) http.HandlerFun
 		}
 
 		res := s.Authenticate(w, r)
+		res.StrategyName = name
 
 		if h == nil {
 			DefaultHandler(w, r, res)
