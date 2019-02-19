@@ -4,3 +4,6 @@ POST http://localhost:5000/login HTTP/1.1
     "username": "username",
     "password": "password"
 }
+
+
+GET http://localhost:5000/success HTTP/1.1

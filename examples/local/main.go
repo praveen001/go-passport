@@ -19,6 +19,13 @@ func success(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("welcome"))
 }
 
+func middleware(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("middleware")
+		h.ServeHTTP(w, r)
+	})
+}
+
 func localStrategy() *local.Strategy {
 	opt := &local.StrategyOptions{
 		UsernameField: "username",
@@ -32,7 +39,7 @@ func localStrategy() *local.Strategy {
 }
 
 func main() {
-	r := chi.NewMux()
+	r := chi.NewRouter()
 
 	opt := &passport.Options{
 		Session:         false,
@@ -40,9 +47,14 @@ func main() {
 		FailureRedirect: "/failure",
 	}
 
-	r.HandleFunc("/login", passport.Authenticate(localStrategy(), opt, nil))
+	r.Group(func(r chi.Router) {
+		r.Post("/login", passport.Authenticate(localStrategy(), opt, nil))
 
-	r.HandleFunc("/success", success)
+		r.Group(func(r chi.Router) {
+			r.Use(middleware)
+			r.Get("/success", success)
+		})
+	})
 
 	http.ListenAndServe(":5000", r)
 }

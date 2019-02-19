@@ -41,9 +41,9 @@ func (res *Result) withDefaultHandler(w http.ResponseWriter, r *http.Request, op
 }
 
 func (res *Result) success(w http.ResponseWriter, r *http.Request, opt *Options) {
-	http.Redirect(w, r, opt.SuccessRedirect, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, opt.SuccessRedirect, http.StatusSeeOther)
 }
 
 func (res *Result) failure(w http.ResponseWriter, r *http.Request, opt *Options) {
-	http.Redirect(w, r, opt.FailureRedirect, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, opt.FailureRedirect, http.StatusSeeOther)
 }
