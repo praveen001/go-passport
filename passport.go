@@ -47,13 +47,12 @@ func (p *Passport) Authenticate(name string, h http.HandlerFunc) http.HandlerFun
 
 		res := s.Authenticate(w, r)
 		res.StrategyName = name
+		ctx := context.WithValue(r.Context(), CtxKey, res)
 
 		if h == nil {
-			DefaultHandler(w, r, res)
-			return
+			h = DefaultHandler
 		}
 
-		ctx := context.WithValue(r.Context(), CtxKey, res)
 		h.ServeHTTP(w, r.WithContext(ctx))
 
 	}
@@ -62,7 +61,9 @@ func (p *Passport) Authenticate(name string, h http.HandlerFunc) http.HandlerFun
 // DefaultHandler returns the info object returned by the strategy after authentication.
 //
 // If authentication has failed, it returns a 403 status response.
-func DefaultHandler(w http.ResponseWriter, r *http.Request, res *Result) {
+func DefaultHandler(w http.ResponseWriter, r *http.Request) {
+	res := r.Context().Value(CtxKey).(*Result)
+
 	if res.Ok {
 		w.WriteHeader(200)
 		w.Write([]byte(fmt.Sprintln(res)))
