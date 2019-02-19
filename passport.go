@@ -2,7 +2,9 @@ package passport
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -11,11 +13,21 @@ type Passport struct {
 	Options *Options
 }
 
+// OutputFormat ..
+type OutputFormat int
+
+// JSON .
+const (
+	JSON OutputFormat = iota
+	String
+)
+
 // Options for passport
 type Options struct {
 	strategies   map[string]Strategy
 	Serializer   func(info interface{}) string
 	Deserializer func(s string) (info interface{})
+	OutputFormat OutputFormat
 }
 
 // New creates a new passport instance
@@ -50,7 +62,7 @@ func (p *Passport) Authenticate(name string, h http.HandlerFunc) http.HandlerFun
 		ctx := context.WithValue(r.Context(), CtxKey, res)
 
 		if h == nil {
-			h = DefaultHandler
+			h = p.DefaultHandler
 		}
 
 		h.ServeHTTP(w, r.WithContext(ctx))
@@ -61,14 +73,26 @@ func (p *Passport) Authenticate(name string, h http.HandlerFunc) http.HandlerFun
 // DefaultHandler returns the info object returned by the strategy after authentication.
 //
 // If authentication has failed, it returns a 403 status response.
-func DefaultHandler(w http.ResponseWriter, r *http.Request) {
+func (p *Passport) DefaultHandler(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value(CtxKey).(*Result)
 
 	if res.Ok {
 		w.WriteHeader(200)
-		w.Write([]byte(fmt.Sprintln(res)))
+		p.output(w, res.Info)
 		return
 	}
 
 	w.WriteHeader(403)
+}
+
+func (p *Passport) output(w http.ResponseWriter, o interface{}) {
+	switch p.Options.OutputFormat {
+	case JSON:
+		if err := json.NewEncoder(w).Encode(o); err != nil {
+			log.Println("Unable to format output to JSON")
+		}
+
+	case String:
+		fmt.Fprintf(w, "%v", o)
+	}
 }

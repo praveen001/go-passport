@@ -46,7 +46,7 @@ func main() {
 	p.Use("local", localStrategy())
 
 	r.Group(func(r chi.Router) {
-		r.Post("/login", p.Authenticate("local", success))
+		r.Post("/login", p.Authenticate("local", nil))
 
 		r.Group(func(r chi.Router) {
 			r.Use(passport.AuthRequired)
