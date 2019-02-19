@@ -21,13 +21,11 @@ type Strategy struct {
 
 // StrategyOptions ..
 type StrategyOptions struct {
-	AuthorizationURL string
-	CallbackURL      string
-	ClientID         string
-	ClientSecret     string
-	TokenURL         string
-	Scopes           []string
-	Verify           func(accessToken, refreshToken string, profile *Profile) (ok bool, info interface{})
+	CallbackURL  string
+	ClientID     string
+	ClientSecret string
+	Scopes       []string
+	Verify       func(accessToken, refreshToken string, profile *Profile) (ok bool, info interface{})
 }
 
 // Profile ..
