@@ -1,46 +1,72 @@
 package passport
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 )
 
+// Passport .
+type Passport struct {
+	Options *Options
+}
+
 // Options for passport
 type Options struct {
-	Session         bool
-	SuccessRedirect string
-	FailureRedirect string
+	strategies   map[string]Strategy
+	Serializer   func(info interface{}) string
+	Deserializer func(s string) (info interface{})
 }
 
-// Authenticate ..
-func Authenticate(s Strategy, opt *Options, h http.HandlerFunc) http.HandlerFunc {
+// New creates a new passport instance
+func New(opt *Options) *Passport {
+	opt.strategies = make(map[string]Strategy)
+	return &Passport{opt}
+}
+
+// Use registers a strategy by name
+//
+// Later, the registered strategy can be used by calling Authenticate() method
+func (p *Passport) Use(name string, s Strategy) {
+	p.Options.strategies[name] = s
+}
+
+// Authenticate calls `Strategy.Authenticate` method of registered strategies, and checks the `passport.Result` returned by it.
+//
+// The result is stored in the request context with `passport.CtxKey` as key.
+//
+// If a handler is provided, it is invoked, otherwise a `DefaultHandler` will be used
+func (p *Passport) Authenticate(name string, h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		s.Authenticate(w, r, func(res *Result) {
-			if h == nil {
-				res.withDefaultHandler(w, r, opt)
-				return
-			}
 
-			res.withCustomHandler(w, r, h)
-		})
+		s, ok := p.Options.strategies[name]
+		if !ok {
+			w.WriteHeader(404)
+			return
+		}
+
+		res := s.Authenticate(w, r)
+
+		if h == nil {
+			DefaultHandler(w, r, res)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), CtxKey, res)
+		h.ServeHTTP(w, r.WithContext(ctx))
+
 	}
 }
 
-func (res *Result) withCustomHandler(w http.ResponseWriter, r *http.Request, h http.HandlerFunc) {
-	h.ServeHTTP(w, r)
-}
-
-func (res *Result) withDefaultHandler(w http.ResponseWriter, r *http.Request, opt *Options) {
+// DefaultHandler returns the info object returned by the strategy after authentication.
+//
+// If authentication has failed, it returns a 403 status response.
+func DefaultHandler(w http.ResponseWriter, r *http.Request, res *Result) {
 	if res.Ok {
-		res.success(w, r, opt)
-	} else {
-		res.failure(w, r, opt)
+		w.WriteHeader(200)
+		w.Write([]byte(fmt.Sprintln(res)))
+		return
 	}
-}
 
-func (res *Result) success(w http.ResponseWriter, r *http.Request, opt *Options) {
-	http.Redirect(w, r, opt.SuccessRedirect, http.StatusSeeOther)
-}
-
-func (res *Result) failure(w http.ResponseWriter, r *http.Request, opt *Options) {
-	http.Redirect(w, r, opt.FailureRedirect, http.StatusSeeOther)
+	w.WriteHeader(403)
 }

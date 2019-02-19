@@ -16,7 +16,8 @@ func login(w http.ResponseWriter, r *http.Request) {
 }
 
 func success(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("welcome"))
+	v := r.Context().Value(passport.CtxKey)
+	w.Write([]byte(fmt.Sprintln(v)))
 }
 
 func middleware(h http.Handler) http.Handler {
@@ -41,14 +42,11 @@ func localStrategy() *local.Strategy {
 func main() {
 	r := chi.NewRouter()
 
-	opt := &passport.Options{
-		Session:         false,
-		SuccessRedirect: "/success",
-		FailureRedirect: "/failure",
-	}
+	p := passport.New(&passport.Options{})
+	p.Use("local", localStrategy())
 
 	r.Group(func(r chi.Router) {
-		r.Post("/login", passport.Authenticate(localStrategy(), opt, nil))
+		r.Post("/login", p.Authenticate("local", success))
 
 		r.Group(func(r chi.Router) {
 			r.Use(passport.AuthRequired)

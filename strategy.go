@@ -1,17 +1,17 @@
 package passport
 
-import "net/http"
+import (
+	"net/http"
+)
 
-// Result ..
+// Result all strategies should return this.
 type Result struct {
-	Ok   bool
-	Info interface{}
+	Ok           bool
+	StrategyName string
+	Info         interface{}
 }
 
-// CallbackFunc ..
-type CallbackFunc func(r *Result)
-
-// Strategy ..
+// Strategy all strategies must implement this.
 type Strategy interface {
-	Authenticate(w http.ResponseWriter, r *http.Request, c CallbackFunc)
+	Authenticate(w http.ResponseWriter, r *http.Request) *Result
 }

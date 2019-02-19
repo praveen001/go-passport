@@ -28,13 +28,13 @@ func New(opt *StrategyOptions) *Strategy {
 }
 
 // Authenticate ..
-func (l *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, next passport.CallbackFunc) {
+func (l *Strategy) Authenticate(w http.ResponseWriter, r *http.Request) *passport.Result {
 	body := make(map[string]string)
 
 	// Read username, password
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		log.Println("Unable to decode request body", err.Error())
-		return
+		return &passport.Result{Ok: false}
 	}
 
 	// If username/password is not present, return 400
@@ -42,15 +42,15 @@ func (l *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, next pas
 	password, hasPassword := body[l.Options.PasswordField]
 	if !hasUsername || !hasPassword {
 		log.Println("Missing credentials")
-		return
+		return &passport.Result{Ok: false}
 	}
 
 	// Call verify
 	ok, info := l.Options.Verify(username, password)
 
-	res := &passport.Result{
+	return &passport.Result{
 		Ok:   ok,
 		Info: info,
 	}
-	next(res)
+
 }
