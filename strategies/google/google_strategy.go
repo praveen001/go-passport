@@ -56,16 +56,14 @@ func (g *Strategy) Authenticate(w http.ResponseWriter, r *http.Request) *passpor
 		Scopes:       g.Options.Scopes,
 	}
 
-	q := r.URL.Query()
-
-	if err := q.Get("error"); err != "" {
+	if err := r.FormValue("error"); err != "" {
 		return &passport.Result{
 			Info: err,
 		}
 	}
 
-	if code := q.Get("code"); code != "" {
-		token, _ := config.Exchange(r.Context(), q.Get("code"))
+	if code := r.FormValue("code"); code != "" {
+		token, _ := config.Exchange(r.Context(), r.FormValue("code"))
 
 		res, _ := http.Get(profileURL + "?access_token=" + token.AccessToken)
 		profile := Profile{}
@@ -81,5 +79,5 @@ func (g *Strategy) Authenticate(w http.ResponseWriter, r *http.Request) *passpor
 	url := config.AuthCodeURL("State", oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 
-	return nil
+	return &passport.Result{}
 }
