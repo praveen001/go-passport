@@ -3,9 +3,6 @@ package passport
 import (
 	"context"
 	"encoding/json"
-	"encoding/xml"
-	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -14,22 +11,10 @@ type Passport struct {
 	Options *Options
 }
 
-// OutputFormat ..
-type OutputFormat int
-
-// JSON .
-const (
-	JSON OutputFormat = iota
-	XML
-	String
-)
-
 // Options for passport
 type Options struct {
 	strategies   map[string]Strategy
-	Serializer   func(info interface{}) string
-	Deserializer func(s string) (info interface{})
-	OutputFormat OutputFormat
+	Deserializer func(s string) (interface{}, error)
 }
 
 // New creates a new passport instance
@@ -59,47 +44,21 @@ func (p *Passport) Authenticate(name string, h http.HandlerFunc) http.HandlerFun
 			return
 		}
 
-		res := s.Authenticate(w, r)
-		res.StrategyName = name
-		ctx := context.WithValue(r.Context(), CtxKey, res)
+		s.Authenticate(w, r, func(res *Result) {
+			res.StrategyName = name
 
-		if h == nil {
-			h = p.DefaultHandler
-		}
+			if res.Error {
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 
-		h.ServeHTTP(w, r.WithContext(ctx))
+			if h == nil {
+				json.NewEncoder(w).Encode(res.Info)
+				return
+			}
 
-	}
-}
-
-// DefaultHandler returns the info object returned by the strategy after authentication.
-//
-// If authentication has failed, it returns a 403 status response.
-func (p *Passport) DefaultHandler(w http.ResponseWriter, r *http.Request) {
-	res := r.Context().Value(CtxKey).(*Result)
-
-	if res.Ok {
-		w.WriteHeader(http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusForbidden)
-	}
-
-	p.output(w, res.Info)
-}
-
-func (p *Passport) output(w http.ResponseWriter, o interface{}) {
-	switch p.Options.OutputFormat {
-	case JSON:
-		if err := json.NewEncoder(w).Encode(o); err != nil {
-			log.Println("Unable to format output to JSON")
-		}
-
-	case XML:
-		if err := xml.NewEncoder(w).Encode(o); err != nil {
-			log.Println("Unable to format output to XML")
-		}
-
-	case String:
-		fmt.Fprintf(w, "%v", o)
+			ctx := context.WithValue(r.Context(), CtxKey, res)
+			h.ServeHTTP(w, r.WithContext(ctx))
+		})
 	}
 }

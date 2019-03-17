@@ -1,13 +1,31 @@
 package passport
 
-import "net/http"
+import (
+	"context"
+	"net/http"
+)
 
 // AuthRequired ..
-func AuthRequired(h http.Handler) http.Handler {
+func (p *Passport) AuthRequired(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		tok := r.Header.Get("authorization")
+		if tok == "" {
+			tok = r.URL.Query().Get("token")
+		}
+
+		if tok == "" {
+			w.WriteHeader(403)
+			return
+		}
+
+		info, err := p.Options.Deserializer(tok)
+		if err != nil {
+			w.WriteHeader(403)
+		}
+
+		ctx := context.WithValue(r.Context(), CtxKey, info)
 		if tok != "" {
-			h.ServeHTTP(w, r)
+			h.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 

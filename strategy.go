@@ -6,12 +6,15 @@ import (
 
 // Result all strategies should return this.
 type Result struct {
-	Ok           bool
 	StrategyName string
-	Info         interface{}
+
+	Ok    bool
+	Error bool
+
+	Info interface{}
 }
 
 // Strategy all strategies must implement this.
 type Strategy interface {
-	Authenticate(w http.ResponseWriter, r *http.Request) *Result
+	Authenticate(w http.ResponseWriter, r *http.Request, cb func(res *Result))
 }

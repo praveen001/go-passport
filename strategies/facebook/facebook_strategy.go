@@ -28,7 +28,7 @@ type StrategyOptions struct {
 	ClientSecret string
 	Scopes       []string
 	Fields       []string
-	Verify       func(accessToken, refreshToken string, profile *Profile) (ok bool, info interface{})
+	Verify       func(accessToken, refreshToken string, profile *Profile) *passport.Result
 }
 
 // Profile ..
@@ -69,7 +69,7 @@ func New(opt *StrategyOptions) *Strategy {
 }
 
 // Authenticate ..
-func (f *Strategy) Authenticate(w http.ResponseWriter, r *http.Request) *passport.Result {
+func (f *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, cb func(*passport.Result)) {
 	config := oauth2.Config{
 		ClientID:     f.Options.ClientID,
 		ClientSecret: f.Options.ClientSecret,
@@ -79,9 +79,10 @@ func (f *Strategy) Authenticate(w http.ResponseWriter, r *http.Request) *passpor
 	}
 
 	if err := r.FormValue("error"); err != "" {
-		return &passport.Result{
+		cb(&passport.Result{
 			Info: err,
-		}
+		})
+		return
 	}
 
 	if code := r.FormValue("code"); code != "" {
@@ -90,31 +91,25 @@ func (f *Strategy) Authenticate(w http.ResponseWriter, r *http.Request) *passpor
 		url := fmt.Sprintf("%s?fields=%s&access_token=%s", profileURL, strings.Join(f.Options.Fields, ","), token.AccessToken)
 		res, err := http.Get(url)
 		if err != nil {
-			return &passport.Result{
-				Ok:   false,
+			cb(&passport.Result{
 				Info: err.Error(),
-			}
+			})
 		}
 
 		profile := Profile{}
 		json.NewDecoder(res.Body).Decode(&profile)
 
 		if profile.Error.Type != "" {
-			return &passport.Result{
-				Ok:   false,
+			cb(&passport.Result{
 				Info: profile.Error,
-			}
+			})
+			return
 		}
 
-		ok, info := f.Options.Verify(token.AccessToken, token.RefreshToken, &profile)
-		return &passport.Result{
-			Ok:   ok,
-			Info: info,
-		}
+		cb(f.Options.Verify(token.AccessToken, token.RefreshToken, &profile))
+		return
 	}
 
 	url := config.AuthCodeURL("State", oauth2.AccessTypeOffline, oauth2.ApprovalForce)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-
-	return &passport.Result{}
 }

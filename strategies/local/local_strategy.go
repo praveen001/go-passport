@@ -2,7 +2,6 @@ package local
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	passport "github.com/praveen001/go-passport"
@@ -17,7 +16,7 @@ type Strategy struct {
 type StrategyOptions struct {
 	UsernameField string
 	PasswordField string
-	Verify        func(username, password string) (ok bool, info interface{})
+	Verify        func(username, password string) *passport.Result
 }
 
 // New ..
@@ -28,29 +27,28 @@ func New(opt *StrategyOptions) *Strategy {
 }
 
 // Authenticate ..
-func (l *Strategy) Authenticate(w http.ResponseWriter, r *http.Request) *passport.Result {
+func (l *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, cb func(*passport.Result)) {
 	body := make(map[string]string)
 
 	// Read username, password
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		log.Println("Unable to decode request body", err.Error())
-		return &passport.Result{Ok: false}
+		cb(&passport.Result{
+			Error: true,
+			Info:  err.Error(),
+		})
+		return
 	}
 
 	// If username/password is not present, return 400
 	username, hasUsername := body[l.Options.UsernameField]
 	password, hasPassword := body[l.Options.PasswordField]
 	if !hasUsername || !hasPassword {
-		log.Println("Missing credentials")
-		return &passport.Result{Ok: false}
+		cb(&passport.Result{
+			Info: "Missing credentials",
+		})
+		return
 	}
 
 	// Call verify
-	ok, info := l.Options.Verify(username, password)
-
-	return &passport.Result{
-		Ok:   ok,
-		Info: info,
-	}
-
+	cb(l.Options.Verify(username, password))
 }
