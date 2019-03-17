@@ -79,12 +79,12 @@ func (p *Passport) DefaultHandler(w http.ResponseWriter, r *http.Request) {
 	res := r.Context().Value(CtxKey).(*Result)
 
 	if res.Ok {
-		w.WriteHeader(200)
-		p.output(w, res.Info)
-		return
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusForbidden)
 	}
 
-	w.WriteHeader(403)
+	p.output(w, res.Info)
 }
 
 func (p *Passport) output(w http.ResponseWriter, o interface{}) {
