@@ -33,8 +33,8 @@ func (l *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, cb func(
 	// Read username, password
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		cb(&passport.Result{
-			Error: true,
-			Info:  err.Error(),
+			Code:    http.StatusBadRequest,
+			Message: err.Error(),
 		})
 		return
 	}
@@ -44,7 +44,8 @@ func (l *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, cb func(
 	password, hasPassword := body[l.Options.PasswordField]
 	if !hasUsername || !hasPassword {
 		cb(&passport.Result{
-			Info: "Missing credentials",
+			Code:    http.StatusBadGateway,
+			Message: "Missing credentials",
 		})
 		return
 	}

@@ -7,11 +7,9 @@ import (
 // Result all strategies should return this.
 type Result struct {
 	StrategyName string
-
-	Ok    bool
-	Error bool
-
-	Info interface{}
+	Code         int
+	Message      string
+	Data         interface{}
 }
 
 // Strategy all strategies must implement this.

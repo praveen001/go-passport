@@ -47,13 +47,12 @@ func (p *Passport) Authenticate(name string, h http.HandlerFunc) http.HandlerFun
 		s.Authenticate(w, r, func(res *Result) {
 			res.StrategyName = name
 
-			if res.Error {
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
 			if h == nil {
-				json.NewEncoder(w).Encode(res.Info)
+				if err := json.NewEncoder(w).Encode(res.Data); err != nil {
+					w.WriteHeader(http.StatusInternalServerError)
+					return
+				}
+				w.WriteHeader(res.Code)
 				return
 			}
 

@@ -58,7 +58,8 @@ func (g *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, cb func(
 
 	if err := r.FormValue("error"); err != "" {
 		cb(&passport.Result{
-			Info: err,
+			Code:    http.StatusBadGateway,
+			Message: err,
 		})
 		return
 	}
@@ -67,7 +68,8 @@ func (g *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, cb func(
 		token, err := config.Exchange(r.Context(), r.FormValue("code"))
 		if err != nil {
 			cb(&passport.Result{
-				Info: err.Error(),
+				Code:    http.StatusBadGateway,
+				Message: err.Error(),
 			})
 			return
 		}
@@ -75,7 +77,8 @@ func (g *Strategy) Authenticate(w http.ResponseWriter, r *http.Request, cb func(
 		res, err := http.Get(profileURL + "?access_token=" + token.AccessToken)
 		if err != nil {
 			cb(&passport.Result{
-				Info: err.Error(),
+				Code:    http.StatusBadGateway,
+				Message: err.Error(),
 			})
 			return
 		}
