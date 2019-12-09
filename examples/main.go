@@ -60,13 +60,14 @@ func localStrategy() *local.Strategy {
 			token, err := getJWT(username)
 			if err != nil {
 				return &passport.Result{
-					Info: err.Error(),
+					Code:    http.StatusBadRequest,
+					Message: err.Error(),
 				}
 			}
 
 			return &passport.Result{
-				Ok: true,
-				Info: AuthResponse{
+				Code: http.StatusOK,
+				Data: AuthResponse{
 					Token: token,
 					Email: username,
 				},
@@ -87,13 +88,14 @@ func googleStrategy() *google.Strategy {
 			token, err := getJWT(profile.Email)
 			if err != nil {
 				return &passport.Result{
-					Info: err.Error(),
+					Code:    http.StatusBadRequest,
+					Message: err.Error(),
 				}
 			}
 
 			return &passport.Result{
-				Ok: true,
-				Info: AuthResponse{
+				Code: http.StatusOK,
+				Data: AuthResponse{
 					Token: token,
 					Email: profile.Email,
 				},
@@ -115,13 +117,14 @@ func facebookStrategy() *facebook.Strategy {
 			token, err := getJWT(profile.Email)
 			if err != nil {
 				return &passport.Result{
-					Info: err.Error(),
+					Code:    http.StatusBadRequest,
+					Message: err.Error(),
 				}
 			}
 
 			return &passport.Result{
-				Ok: true,
-				Info: AuthResponse{
+				Code: http.StatusOK,
+				Data: AuthResponse{
 					Token: token,
 					Email: profile.Email,
 				},

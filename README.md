@@ -14,15 +14,16 @@ func localStrategy() *local.Strategy {
 			token, err := getJWT(username)
 			if err != nil {
 				return &passport.Result{
-					Info: err.Error(),
+					Code: http.StatusBadRequest,
+					Message: err.Error(),
 				}
             }
 
 			return &passport.Result{
-				Ok: true,
-				Info: AuthResponse{
+				Code: http.StatusOK,
+				Data: AuthResponse{
 					Token: token,
-					Email: username,
+					Email: profile.Email,
 				},
 			}
 		},
