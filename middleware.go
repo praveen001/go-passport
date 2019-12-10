@@ -23,7 +23,7 @@ func (p *Passport) AuthRequired(h http.Handler) http.Handler {
 			w.WriteHeader(403)
 		}
 
-		ctx := context.WithValue(r.Context(), CtxKey, info)
+		ctx := context.WithValue(r.Context(), AuthCtxKey, info)
 		if tok != "" {
 			h.ServeHTTP(w, r.WithContext(ctx))
 			return

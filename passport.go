@@ -56,7 +56,7 @@ func (p *Passport) Authenticate(name string, h http.HandlerFunc) http.HandlerFun
 				return
 			}
 
-			ctx := context.WithValue(r.Context(), CtxKey, res)
+			ctx := context.WithValue(r.Context(), ResultCtxKey, res)
 			h.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

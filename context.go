@@ -4,7 +4,8 @@ type contextKey struct {
 	name string
 }
 
-// CtxKey is the context key where passport sets the authentication result.
+// ResultCtxKey is the context key where passport sets the authentication result.
 var (
-	CtxKey = &contextKey{"passport"}
+	ResultCtxKey = &contextKey{"passport_result"}
+	AuthCtxKey   = &contextKey{"passport_auth"}
 )
