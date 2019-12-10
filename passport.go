@@ -13,10 +13,11 @@ type Passport struct {
 
 // Options for passport
 type Options struct {
-	headerName     string
-	queryParamName string
-	cookieName     string
-	strategies     map[string]Strategy
+	strategies map[string]Strategy
+
+	HeaderName     string
+	QueryParamName string
+	CookieName     string
 	Deserializer   func(s string) (interface{}, error)
 }
 
