@@ -8,9 +8,19 @@ import (
 // AuthRequired ..
 func (p *Passport) AuthRequired(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		tok := r.Header.Get("authorization")
+		tok := r.Header.Get(p.Options.headerName)
 		if tok == "" {
-			tok = r.URL.Query().Get("token")
+			tok = r.URL.Query().Get(p.Options.queryParamName)
+		}
+
+		if tok == "" {
+			c, err := r.Cookie(p.Options.cookieName)
+			if err != nil {
+				w.WriteHeader(403)
+				return
+			}
+
+			tok = c.Value
 		}
 
 		if tok == "" {

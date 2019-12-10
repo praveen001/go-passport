@@ -13,8 +13,11 @@ type Passport struct {
 
 // Options for passport
 type Options struct {
-	strategies   map[string]Strategy
-	Deserializer func(s string) (interface{}, error)
+	headerName     string
+	queryParamName string
+	cookieName     string
+	strategies     map[string]Strategy
+	Deserializer   func(s string) (interface{}, error)
 }
 
 // New creates a new passport instance
